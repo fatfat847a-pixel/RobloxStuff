@@ -1,4 +1,4 @@
--- Version: 1.4.0
+-- Version: 1.3.0
 
 --[[
 This module was made by: Zaya_Blaze, https://scriptblox.com/u/Zaya.
@@ -75,19 +75,19 @@ local function LoadUpdates()
 		
 		if version and current and version ~= current then
 			print("Outdated version, Updating...",true, "[v"..current.." → v"..version.."]")
-			writefile(folderPath.."/F3XModule.btools",str..(commenter.."Loaded 🫪"))
+			writefile(folderPath.."/F3XModule.btools",str..(commenter.."My reaction when I am up to date: 🫪"))
 			writefile(folderPath.."/"..versionfile, version)
-			return readfile(folderPath.."/F3XModule.btools")
+			return readfile(folderPath.."/F3XModule.btools") or "Failed to update."
 		else
 			if isfolder(folderPath) then
 				if isfile(folderPath.."/"..versionfile) then
 					local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
 					local oldstr = readfile(folderPath.."/F3XModule.btools")
 
-					if string.match(oldstr, (commenter.."Loaded 🫪")) then
+					if string.match(oldstr, (commenter.."My reaction when I am up to date: 🫪")) then
 						return
 					else		
-						return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
+						return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua") or "Failed to update / Failed to use older version."
 					end
 				end
 			end	
@@ -97,7 +97,7 @@ local function LoadUpdates()
 			if isfile(folderPath.."/"..versionfile) then
 				local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
 				print("Could not fetch latest version, using version "..current..".",true)
-				return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
+				return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua") or "Failed to update."
 			end
 		end	
 	end
