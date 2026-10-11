@@ -1,5 +1,5 @@
 local F3XModule = {}
---Version: 1.3.0
+-- Version: 1.3.0
 
 --[[
 This module was made by: Zaya_Blaze, https://scriptblox.com/u/Zaya.
@@ -18,76 +18,13 @@ end
 return F3XModulePlugin
 ]]
 
-local function LoadUpdates()
-	local resp = game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
-	local version,current = nil,nil
-	local folderPath,versionfile = "F3XModule", "Version.txt"
-
-	if resp then
-		local str = tostring(resp)
-
-		if isfolder(folderPath) then
-			if isfile(folderPath.."/"..versionfile) then
-				current = readfile(folderPath.."/"..versionfile)
-			end
-		end
-
-		if str:match("Version: ") then
-			version = str:match("Version: (.+)")
-		end
-
-		if version and current and version ~= current then
-			writefile(folderPath.."/F3XModule.btools","--Loaded"..str)
-			return readfile(folderPath.."/F3XModule.btools")
-		else	
-			if isfolder(folderPath) then
-				if isfile(folderPath.."/"..versionfile) then
-					local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
-					local oldstr = readfile(folderPath.."/F3XModule.btools")
-
-					if string.match(oldstr, "--Loaded") then
-						return nil
-					else		
-						return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
-					end
-				end
-			end	
-		end
-	else	
-		if isfolder(folderPath) then
-			if isfile(folderPath.."/"..versionfile) then
-				local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
-				return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
-			end
-		end	
-	end
-end
-local updatesresponse = LoadUpdates()
-
-if updatesresponse ~= nil then
-	return loadstring(updatesresponse)
-end
-
-F3XModule.IsModuleReady = false
-F3XModule.PluginsLoaded = false
-
-getgenv().F3XConnections = {}
-
 if not getgenv().F3XModule_Settings then
 	getgenv().F3XModule_Settings = {
 		UseCustomPrint = true,
 		UsePlugins = true,
+		DoNotUpdate = false
 	}
 end
-
-local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-local HttpService = game:GetService("HttpService")
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local SyncAPI, ServerEndpoint
-local TimeoutWarnings, MaxTimeoutWarnings, ReachedTimeoutWarningMax = 0, 10, false
 
 local warn = function(words, HasPrintLogo, LogoExtra)
 	if getgenv().F3XModule_Settings.UseCustomPrint == false then return warn(words) end
@@ -112,6 +49,75 @@ local print = function(words, HasPrintLogo, LogoExtra)
 		print(LogoExtra.."[F3XModule]: "..words)
 	end
 end
+
+local function LoadUpdates()
+	if F3XModule_Settings.DoNotUpdate then return nil end
+	local resp = game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
+	local version,current = nil,nil
+	local folderPath,versionfile = "F3XModule", "Version.txt"
+	local commenter = string.format("U+002D")..string.format("U+002D")
+	
+	if resp then
+		local str = tostring(resp)
+
+		if isfolder(folderPath) then
+			if isfile(folderPath.."/"..versionfile) then
+				current = readfile(folderPath.."/"..versionfile)
+			end
+		end
+
+		if str:match("Version: ") then
+			version = string.sub(str:match("Version: (.+)"),5)
+		end
+		
+		if version and current and version ~= current then
+			print("Outdated version, Updating...",true, "[v"..current.." → v"..version.."]")
+			writefile(folderPath.."/F3XModule.btools",str..(commenter.."Loaded"))
+			writefile(folderPath.."/"..versionfile, version)
+			return readfile(folderPath.."/F3XModule.btools")
+		else
+			if isfolder(folderPath) then
+				if isfile(folderPath.."/"..versionfile) then
+					local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
+					local oldstr = readfile(folderPath.."/F3XModule.btools")
+
+					if string.match(oldstr, (commenter.."Loaded")) then
+						return nil
+					else		
+						return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
+					end
+				end
+			end	
+		end
+	else	
+		if isfolder(folderPath) then
+			if isfile(folderPath.."/"..versionfile) then
+				local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
+				print("Could not fetch latest version, using version "..current..".",true)
+				return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
+			end
+		end	
+	end
+end
+local updatesresponse = LoadUpdates()
+
+if updatesresponse ~= nil then
+	return loadstring(updatesresponse)
+end
+
+F3XModule.IsModuleReady = false
+F3XModule.PluginsLoaded = false
+
+getgenv().F3XConnections = {}
+
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local SyncAPI, ServerEndpoint
+local TimeoutWarnings, MaxTimeoutWarnings, ReachedTimeoutWarningMax = 0, 10, false
 
 local function FindSyncAPI(plr)
 	for i,v in pairs(plr.Character:GetDescendants()) do
