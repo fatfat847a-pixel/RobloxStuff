@@ -87,7 +87,7 @@ local function LoadUpdates()
 					if string.match(oldstr, (commenter.."My reaction when I am up to date: 🫪")) then
 						return
 					else		
-						return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua") or "Failed to update / Failed to use older version."
+						return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua") or "!Error: Failed to update / Failed to use older version."
 					end
 				end
 			end	
@@ -97,7 +97,7 @@ local function LoadUpdates()
 			if isfile(folderPath.."/"..versionfile) then
 				local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
 				print("Could not fetch latest version, using version "..current..".",true)
-				return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua") or "Failed to update."
+				return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua") or "!Error: Failed to update."
 			end
 		end	
 	end
@@ -1834,7 +1834,11 @@ end
 local updatesresponse = LoadUpdates()
 
 if updatesresponse then
-	return loadstring(updatesresponse)()
+	if type(updatesresponse) == "string" and updatesresponse:find("!Error: ") then
+		return warn(updatesresponse)
+	else	
+		return loadstring(updatesresponse)()
+	end
 else	
 	return MainMod()
 end
