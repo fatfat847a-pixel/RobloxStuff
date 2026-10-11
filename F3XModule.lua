@@ -163,6 +163,10 @@ function F3XModule.GetPartFromText(parent, text)
 	return instFound
 end
 
+local function IsTable(Obj:any)
+	return type(Obj) == "table"
+end
+
 local function getImageIdFromAssetId(assetId)
 	assetId = tonumber(assetId)
 	if not assetId then
@@ -357,171 +361,254 @@ function F3XModule.CreatePart(CFrameV:CFrame, Parent:Instance, PartType:string)
 	SyncAPI:Invoke(unpack(args))
 end
 
-function F3XModule.ColorPart(BasePart:BasePart, Color3RGB:Color3)
-	SyncAPI:Invoke(
-		"SyncColor",
-		{
-			{
+function F3XModule.ColorPart(BasePart:BasePart|{BasePart:BasePart}, Color3RGB:Color3)
+	if IsTable(BasePart) then
+		local tab = {}
+
+		for i,v in pairs(BasePart) do
+			tab[i] = {
 				Color = Color3RGB,
-				Part = BasePart,
+				Part = v,
 				UnionColoring = true
 			}
-		}
-	)
+		end
 
+		SyncAPI:Invoke(
+			"SyncColor",
+			tab
+		)
+	else	
+		SyncAPI:Invoke(
+			"SyncColor",
+			{
+				{
+					Color = Color3RGB,
+					Part = BasePart,
+					UnionColoring = true
+				}
+			}
+		)
+	end
 end
 
-function F3XModule.ResizePart(BasePart:BasePart, CFrameV:CFrame, SizeV:Vector3)
-	SyncAPI:Invoke(
-		"SyncResize",
-		{
-			{
-				Part = BasePart,
+function F3XModule.ResizePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFrame, SizeV:Vector3)
+	if IsTable(BasePart) then
+		local tab = {}
+
+		for i,v in pairs(BasePart) do
+			tab[i] = {
+				Part = v,
 				CFrame = CFrameV,
 				Size = SizeV
 			}
-		}
-	)
-
+		end
+		
+		SyncAPI:Invoke(
+			"SyncResize",
+			tab
+		)
+	else	
+		SyncAPI:Invoke(
+			"SyncResize",
+			{
+				{
+					Part = BasePart,
+					CFrame = CFrameV,
+					Size = SizeV
+				}
+			}
+		)
+	end
 end
 
-function F3XModule.MovePart(BasePart:BasePart, CFrameV:CFrame)
-	SyncAPI:Invoke(
-		"SyncMove",
-		{
-			{
-				Part = workspace.Part,
+function F3XModule.MovePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFrame)
+	if IsTable(BasePart) then
+		local tab = {}
+
+		for i,v in pairs(BasePart) do
+			tab[i] = {
+				Part = v,
 				CFrame = CFrameV
 			}
-		}
-	)
-
+		end
+		SyncAPI:Invoke(
+			"SyncMove",
+			tab
+		)
+	else	
+		SyncAPI:Invoke(
+			"SyncMove",
+			{
+				{
+					Part = BasePart,
+					CFrame = CFrameV
+				}
+			}
+		)
+	end
 end
 
-function F3XModule.RotatePart(BasePart:BasePart, CFrameV:CFrame)
-	SyncAPI:Invoke(
-		"SyncRotate",
-		{
-			{
-				Part = workspace.Part,
+function F3XModule.RotatePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFrame)
+	if IsTable(BasePart) then
+		local tab = {}
+
+		for i,v in pairs(BasePart) do
+			tab[i] = {
+				Part = v,
 				CFrame = CFrameV
 			}
-		}
-	)
+		end
+		SyncAPI:Invoke(
+			"SyncRotate",
+			tab
+		)
+	else	
+		SyncAPI:Invoke(
+			"SyncRotate",
+			{
+				{
+					Part = BasePart,
+					CFrame = CFrameV
+				}
+			}
+		)
+	end
 end
 
-function F3XModule.CreateEffect(Parent:Instance, EffectType:string)
+function F3XModule.CreateEffect(Parent:Instance|{BasePart:BasePart}, EffectType:string)
 	EffectType = CapitalizeFirst(EffectType)
-	ServerEndpoint:InvokeServer(
-		"CreateDecorations",
-		{
-			{
-				Part = Parent,
+	
+	if IsTable(Parent) then
+		local tab = {}
+
+		for i,v in pairs(Parent) do
+			tab[i] = {
+				Part = v,
 				DecorationType = EffectType
 			}
-		}
-	)
+		end
+		
+		ServerEndpoint:InvokeServer(
+			"CreateDecorations",
+			tab
+		)
+	else	
+		ServerEndpoint:InvokeServer(
+			"CreateDecorations",
+			{
+				{
+					Part = Parent,
+					DecorationType = EffectType
+				}
+			}
+		)
+	end
 end
 
-function F3XModule.UpdateEffect(BasePart:BasePart, EffectChanges:{Fire:{Color:Color3|nil,SecondaryColor:Color3|nil,Heat:number|nil,Size:number|nil}|nil,Smoke:{Color:Color3|nil,RiseVelocity:number|nil,Size:number|nil}|nil,Sparkles:{SparkleColor:Color3|nil}|nil})
+function F3XModule.UpdateEffect(BasePart:BasePart|{BasePart:BasePart}, EffectChanges:{Fire:{Color:Color3|nil,SecondaryColor:Color3|nil,Heat:number|nil,Size:number|nil}|nil,Smoke:{Color:Color3|nil,RiseVelocity:number|nil,Size:number|nil}|nil,Sparkles:{SparkleColor:Color3|nil}|nil})
+	if not EffectChanges then return end
+
+	local function buildAndSend(decorationType: string, props: {[string]: any})
+		local changes = {}
+
+		if IsTable(BasePart) then
+			for _, part in pairs(BasePart) do
+				if typeof(part) == "Instance" and part:IsA("BasePart") then
+					local entry = {
+						Part = part,
+						DecorationType = decorationType,
+					}
+					for k, v in pairs(props) do
+						entry[k] = v
+					end
+					table.insert(changes, entry)
+				end
+			end
+		else
+			if typeof(BasePart) == "Instance" and BasePart:IsA("BasePart") then
+				local entry = {
+					Part = BasePart,
+					DecorationType = decorationType,
+				}
+				for k, v in pairs(props) do
+					entry[k] = v
+				end
+				table.insert(changes, entry)
+			end
+		end
+
+		if #changes > 0 then
+			ServerEndpoint:InvokeServer("SyncDecorate", changes)
+		end
+	end
+
 	if EffectChanges.Fire then
-		local EffectType = "Fire"
-		local args = {
-			"SyncDecorate",
-			{
-				{
-					Part = BasePart,
-					DecorationType = EffectType,
-				}
-			}
-		}
-
-		if EffectChanges[EffectType] then
-			if (EffectChanges[EffectType].Color or EffectChanges[EffectType][1]) then
-				args[2][1].Color = EffectChanges[EffectType].Color or EffectChanges[EffectType][1]
-			end
-			if (EffectChanges[EffectType].Size or EffectChanges[EffectType][4]) then
-				args[2][1].Size = EffectChanges[EffectType].Size or EffectChanges[EffectType][4]
-			end
-			if (EffectChanges[EffectType].Heat or EffectChanges[EffectType][3]) then
-				args[2][1].Heat = EffectChanges[EffectType].Heat or EffectChanges[EffectType][3]
-			end
-			if (EffectChanges[EffectType].SecondaryColor or EffectChanges[EffectType][2]) then
-				args[2][1].SecondaryColor = EffectChanges[EffectType].SecondaryColor or EffectChanges[EffectType][2]
-			end
-		end
-
-		ServerEndpoint:InvokeServer(unpack(args))
+		local props = {}
+		local f = EffectChanges.Fire
+		if f.Color or f[1] then props.Color = f.Color or f[1] end
+		if f.SecondaryColor or f[2] then props.SecondaryColor = f.SecondaryColor or f[2] end
+		if f.Heat or f[3] then props.Heat = f.Heat or f[3] end
+		if f.Size or f[4] then props.Size = f.Size or f[4] end
+		buildAndSend("Fire", props)
 	end
+
 	if EffectChanges.Smoke then
-		local EffectType = "Smoke"
-		local args = {
-			"SyncDecorate",
-			{
-				{
-					Part = BasePart,
-					DecorationType = EffectType,
-				}
-			}
-		}
-
-		if EffectChanges[EffectType] then
-			if (EffectChanges[EffectType].Color or EffectChanges[EffectType][1]) then
-				args[2][1].Color = EffectChanges[EffectType].Color or EffectChanges[EffectType][1]
-			end
-			if (EffectChanges[EffectType].Size or EffectChanges[EffectType][3]) then
-				args[2][1].Size = EffectChanges[EffectType].Size or EffectChanges[EffectType][3]
-			end
-			if (EffectChanges[EffectType].RiseVelocity or EffectChanges[EffectType][2]) then
-				args[2][1].RiseVelocity = EffectChanges[EffectType].RiseVelocity or EffectChanges[EffectType][2]
-			end
-		end
-
-		ServerEndpoint:InvokeServer(unpack(args))
+		local props = {}
+		local s = EffectChanges.Smoke
+		if s.Color or s[1] then props.Color = s.Color or s[1] end
+		if s.RiseVelocity or s[2] then props.RiseVelocity = s.RiseVelocity or s[2] end
+		if s.Size or s[3] then props.Size = s.Size or s[3] end
+		buildAndSend("Smoke", props)
 	end
+
 	if EffectChanges.Sparkles then
-		local EffectType = "Sparkles"
-		local args = {
-			"SyncDecorate",
-			{
-				{
-					Part = BasePart,
-					DecorationType = EffectType,
-				}
-			}
-		}
-
-		if EffectChanges[EffectType] then
-			if (EffectChanges[EffectType].SparkleColor or EffectChanges[EffectType][1]) then
-				args[2][1].SparkleColor = EffectChanges[EffectType].SparkleColor  or EffectChanges[EffectType][1]
-			end
-		end
-
-		ServerEndpoint:InvokeServer(unpack(args))
+		local props = {}
+		local sp = EffectChanges.Sparkles
+		if sp.SparkleColor or sp[1] then props.SparkleColor = sp.SparkleColor or sp[1] end
+		buildAndSend("Sparkles", props)
 	end
 end
 
-function F3XModule.FastEffect(BasePart:BasePart, EffectChanges:{Fire:{Color:Color3|nil,SecondaryColor:Color3|nil,Heat:number|nil,Size:number|nil}|nil,Smoke:{Color:Color3|nil,RiseVelocity:number|nil,Size:number|nil}|nil,Sparkles:{SparkleColor:Color3|nil}|nil})
-	task.spawn(function()
-		if EffectChanges.Fire then
-			F3XModule.CreateEffect(BasePart, "Fire")	
-		end
+function F3XModule.FastEffect(BasePart:BasePart|{BasePart:BasePart}, EffectChanges:{Fire:{Color:Color3|nil,SecondaryColor:Color3|nil,Heat:number|nil,Size:number|nil}|nil,Smoke:{Color:Color3|nil,RiseVelocity:number|nil,Size:number|nil}|nil,Sparkles:{SparkleColor:Color3|nil}|nil})
+	if not EffectChanges then return end
+	if IsTable(BasePart) then
+		for _, part in pairs(BasePart) do
+			task.spawn(function()
+				if EffectChanges.Fire then
+					F3XModule.CreateEffect(BasePart, "Fire")	
+				end
 
-		if EffectChanges.Smoke then
-			F3XModule.CreateEffect(BasePart, "Smoke")	
-		end
+				if EffectChanges.Smoke then
+					F3XModule.CreateEffect(BasePart, "Smoke")	
+				end
 
-		if EffectChanges.Sparkles then
-			F3XModule.CreateEffect(BasePart, "Sparkles")	
-		end
+				if EffectChanges.Sparkles then
+					F3XModule.CreateEffect(BasePart, "Sparkles")	
+				end
 
-		F3XModule.UpdateEffect(BasePart, EffectChanges)
-	end)
+				F3XModule.UpdateEffect(BasePart, EffectChanges)
+			end)
+		end
+	else	
+		task.spawn(function()
+			if EffectChanges.Fire then
+				F3XModule.CreateEffect(BasePart, "Fire")	
+			end
+
+			if EffectChanges.Smoke then
+				F3XModule.CreateEffect(BasePart, "Smoke")	
+			end
+
+			if EffectChanges.Sparkles then
+				F3XModule.CreateEffect(BasePart, "Sparkles")	
+			end
+
+			F3XModule.UpdateEffect(BasePart, EffectChanges)
+		end)
+	end
 end
 
-function F3XModule.Delete(Inst)
-	print(Inst.Name)
-
+function F3XModule.Delete(Inst:BasePart|{BasePart:BasePart})
 	if type(Inst) == "table" then
 		local args = {
 			"Remove",
@@ -546,165 +633,222 @@ function F3XModule.Delete(Inst)
 end
 
 function F3XModule.CreateLight(Parent:Instance, LightType:string)
-	SyncAPI:Invoke(
-		"CreateLights",
-		{
-			{
-				Part = Parent,
+	if IsTable(Parent) then
+		local tab = {}
+		for i,v in pairs(Parent) do
+			tab[i] = {
+				Part = v,
 				LightType = LightType
 			}
-		}
-	)
+		end
+		
+		SyncAPI:Invoke(
+			"CreateLights",
+			tab
+		)
+	else	
+		SyncAPI:Invoke(
+			"CreateLights",
+			{
+				{
+					Part = Parent,
+					LightType = LightType
+				}
+			}
+		)
+	end
 end
 
-function F3XModule.UpdateLight(BasePart:BasePart, LightChanges:{SpotLight:{Range:number,Brightness:number,Color:Color3,Shadows:boolean,Face:Enum.NormalId,Angle:number},SurfaceLight:{Range:number,Brightness:number,Color:Color3,Shadows:boolean,Face:Enum.NormalId,Angle:number},PointLight:{Range:number,Brightness:number,Color:Color3,Shadows:boolean}})
+function F3XModule.UpdateLight(BasePart:BasePart|{BasePart:BasePart}, LightChanges:{SpotLight:{Range:number,Brightness:number,Color:Color3,Shadows:boolean,Face:Enum.NormalId,Angle:number},SurfaceLight:{Range:number,Brightness:number,Color:Color3,Shadows:boolean,Face:Enum.NormalId,Angle:number},PointLight:{Range:number,Brightness:number,Color:Color3,Shadows:boolean}})
+	if not LightChanges then return end
+
+	local function buildAndSend(lightType: string, props: {[string]: any})
+		local changes = {}
+
+		if IsTable(BasePart) then
+			for _, part in pairs(BasePart) do
+				if typeof(part) == "Instance" and part:IsA("BasePart") then
+					local entry = {
+						Part = part,
+						LightType = lightType,
+					}
+					for k, v in pairs(props) do
+						entry[k] = v
+					end
+					table.insert(changes, entry)
+				end
+			end
+		else
+			if typeof(BasePart) == "Instance" and BasePart:IsA("BasePart") then
+				local entry = {
+					Part = BasePart,
+					LightType = lightType,
+				}
+				for k, v in pairs(props) do
+					entry[k] = v
+				end
+				table.insert(changes, entry)
+			end
+		end
+
+		if #changes > 0 then
+			ServerEndpoint:InvokeServer("SyncLighting", changes)
+		end
+	end
+
 	if LightChanges.SpotLight then
-		local Light_Type = "SpotLight"
-		local args = {
-			"SyncLighting",
-			{
-				{
-					Part = BasePart,
-					LightType = Light_Type,
-				}
-			}
-		}
-
-		if LightChanges[Light_Type] then
-			if LightChanges[Light_Type].Range then
-				args[2][1].Range = LightChanges[Light_Type].Range or LightChanges[Light_Type][1]
-			end
-			if (LightChanges[Light_Type].Brightness or LightChanges[Light_Type][2]) then
-				args[2][1].Brightness = LightChanges[Light_Type].Brightness or LightChanges[Light_Type][2]
-			end
-			if (LightChanges[Light_Type].Color or LightChanges[Light_Type][3]) then
-				args[2][1].Color = LightChanges[Light_Type].Color or LightChanges[Light_Type][3]
-			end
-			if( LightChanges[Light_Type].Shadows or LightChanges[Light_Type][4]) then
-				args[2][1].Shadows = LightChanges[Light_Type].Shadows or LightChanges[Light_Type][4]
-			end
-			if (LightChanges[Light_Type].Face or LightChanges[Light_Type][5]) then
-				args[2][1].Face = LightChanges[Light_Type].Face or LightChanges[Light_Type][5]
-			end
-			if (LightChanges[Light_Type].Angle or LightChanges[Light_Type][6]) then
-				args[2][1].Angle = LightChanges[Light_Type].Angle  or LightChanges[Light_Type][6]
-			end
-		end
-
-		ServerEndpoint:InvokeServer(unpack(args))
+		local props = {}
+		local l = LightChanges.SpotLight
+		if l.Range or l[1] then props.Range = l.Range or l[1] end
+		if l.Brightness or l[2] then props.Brightness = l.Brightness or l[2] end
+		if l.Color or l[3] then props.Color = l.Color or l[3] end
+		if l.Shadows ~= nil or l[4] ~= nil then props.Shadows = l.Shadows or l[4] end
+		if l.Face or l[5] then props.Face = l.Face or l[5] end
+		if l.Angle or l[6] then props.Angle = l.Angle or l[6] end
+		buildAndSend("SpotLight", props)
 	end
+
 	if LightChanges.SurfaceLight then
-		local Light_Type = "SurfaceLight"
-		local args = {
-			"SyncLighting",
-			{
-				{
-					Part = BasePart,
-					LightType = Light_Type,
-				}
-			}
-		}
-
-		if LightChanges[Light_Type] then
-			if LightChanges[Light_Type].Range then
-				args[2][1].Range = LightChanges[Light_Type].Range or LightChanges[Light_Type][1]
-			end
-			if (LightChanges[Light_Type].Brightness or LightChanges[Light_Type][2]) then
-				args[2][1].Brightness = LightChanges[Light_Type].Brightness or LightChanges[Light_Type][2]
-			end
-			if (LightChanges[Light_Type].Color or LightChanges[Light_Type][3]) then
-				args[2][1].Color = LightChanges[Light_Type].Color or LightChanges[Light_Type][3]
-			end
-			if( LightChanges[Light_Type].Shadows or LightChanges[Light_Type][4]) then
-				args[2][1].Shadows = LightChanges[Light_Type].Shadows or LightChanges[Light_Type][4]
-			end
-			if (LightChanges[Light_Type].Face or LightChanges[Light_Type][5]) then
-				args[2][1].Face = LightChanges[Light_Type].Face or LightChanges[Light_Type][5]
-			end
-			if (LightChanges[Light_Type].Angle or LightChanges[Light_Type][6]) then
-				args[2][1].Angle = LightChanges[Light_Type].Angle  or LightChanges[Light_Type][6]
-			end
-		end
-
-		ServerEndpoint:InvokeServer(unpack(args))
+		local props = {}
+		local l = LightChanges.SurfaceLight
+		if l.Range or l[1] then props.Range = l.Range or l[1] end
+		if l.Brightness or l[2] then props.Brightness = l.Brightness or l[2] end
+		if l.Color or l[3] then props.Color = l.Color or l[3] end
+		if l.Shadows ~= nil or l[4] ~= nil then props.Shadows = l.Shadows or l[4] end
+		if l.Face or l[5] then props.Face = l.Face or l[5] end
+		if l.Angle or l[6] then props.Angle = l.Angle or l[6] end
+		buildAndSend("SurfaceLight", props)
 	end
+
 	if LightChanges.PointLight then
-		local Light_Type = "PointLight"
-		local args = {
-			"SyncLighting",
-			{
-				{
-					Part = BasePart,
-					LightType = Light_Type,
-				}
-			}
-		}
-
-		if LightChanges[Light_Type] then
-			if LightChanges[Light_Type].Range then
-				args[2][1].Range = LightChanges[Light_Type].Range or LightChanges[Light_Type][1]
-			end
-			if (LightChanges[Light_Type].Brightness or LightChanges[Light_Type][2]) then
-				args[2][1].Brightness = LightChanges[Light_Type].Brightness or LightChanges[Light_Type][2]
-			end
-			if (LightChanges[Light_Type].Color or LightChanges[Light_Type][3]) then
-				args[2][1].Color = LightChanges[Light_Type].Color or LightChanges[Light_Type][3]
-			end
-			if( LightChanges[Light_Type].Shadows or LightChanges[Light_Type][4]) then
-				args[2][1].Shadows = LightChanges[Light_Type].Shadows or LightChanges[Light_Type][4]
-			end
-		end
-
-		ServerEndpoint:InvokeServer(unpack(args))
+		local props = {}
+		local l = LightChanges.PointLight
+		if l.Range or l[1] then props.Range = l.Range or l[1] end
+		if l.Brightness or l[2] then props.Brightness = l.Brightness or l[2] end
+		if l.Color or l[3] then props.Color = l.Color or l[3] end
+		if l.Shadows ~= nil or l[4] ~= nil then props.Shadows = l.Shadows or l[4] end
+		buildAndSend("PointLight", props)
 	end
-
 end
 
 function F3XModule.FastLight(BasePart:BasePart, LightChanges:{SpotLight:{Range:number,Brightness:number,Color:Color3,Shadows:boolean,Face:Enum.NormalId,Angle:number},SurfaceLight:{Range:number,Brightness:number,Color:Color3,Shadows:boolean,Face:Enum.NormalId,Angle:number},PointLight:{Range:number,Brightness:number,Color:Color3,Shadows:boolean}})
-	task.spawn(function()
-		if LightChanges.SpotLight then
-			F3XModule.CreateLight(BasePart, "SpotLight")	
-		end
+	if not LightChanges then return end
+	if IsTable(BasePart) then
+		for _, part in pairs(BasePart) do
+			task.spawn(function()
+				if LightChanges.SpotLight then
+					F3XModule.CreateLight(BasePart, "SpotLight")	
+				end
 
-		if LightChanges.SurfaceLight then
-			F3XModule.CreateLight(BasePart, "SurfaceLight")	
-		end
+				if LightChanges.SurfaceLight then
+					F3XModule.CreateLight(BasePart, "SurfaceLight")	
+				end
 
-		if LightChanges.PointLight then
-			F3XModule.CreateLight(BasePart, "PointLight")	
-		end
+				if LightChanges.PointLight then
+					F3XModule.CreateLight(BasePart, "PointLight")	
+				end
 
-		F3XModule.UpdateLight(BasePart, LightChanges)
-	end)
+				F3XModule.UpdateLight(BasePart, LightChanges)
+			end)
+		end
+	else	
+		task.spawn(function()
+			if LightChanges.SpotLight then
+				F3XModule.CreateLight(BasePart, "SpotLight")	
+			end
+
+			if LightChanges.SurfaceLight then
+				F3XModule.CreateLight(BasePart, "SurfaceLight")	
+			end
+
+			if LightChanges.PointLight then
+				F3XModule.CreateLight(BasePart, "PointLight")	
+			end
+
+			F3XModule.UpdateLight(BasePart, LightChanges)
+		end)
+	end
 end
 
-function F3XModule.SetCollision(BasePart:BasePart, CollisionV:boolean)
-	local args = {
-		"SyncCollision",
-		{
-			{
-				Part = BasePart,
+function F3XModule.SetCollision(BasePart:BasePart|{BasePart:BasePart}, CollisionV:boolean)
+	if IsTable(BasePart) then
+		local tab = {}
+		
+		for i,v in pairs(BasePart) do
+			tab[i] ={
+				Part = v,
 				CanCollide = CollisionV
 			}
+		end
+		
+		local args = {
+			"SyncCollision",
+			tab
 		}
-	}
-	SyncAPI:Invoke(unpack(args))
+		SyncAPI:Invoke(unpack(args))
+	else	
+		local args = {
+			"SyncCollision",
+			{
+				{
+					Part = BasePart,
+					CanCollide = CollisionV
+				}
+			}
+		}
+		SyncAPI:Invoke(unpack(args))
+	end
 end
 
 function F3XModule.SetAnchor(BasePart:BasePart, AnchoredV:boolean)
-	local args = {
-		"SyncAnchor",
-		{
-			{
-				Part = BasePart,
+	if IsTable(BasePart) then
+		local tab = {}
+
+		for i,v in pairs(BasePart) do
+			tab[i] ={
+				Part = v,
 				Anchored = AnchoredV
 			}
+		end
+
+		local args = {
+			"SyncAnchor",
+			tab
 		}
-	}
-	SyncAPI:Invoke(unpack(args))
+		SyncAPI:Invoke(unpack(args))
+	else	
+		local args = {
+			"SyncAnchor",
+			{
+				{
+					Part = BasePart,
+					Anchored = AnchoredV
+				}
+			}
+		}
+		SyncAPI:Invoke(unpack(args))
+	end
 end
 
-function F3XModule.CreateTexture(FaceV:Enum.NormalId, Parent:Instance, TextureTypeV:string)
+function F3XModule.CreateTexture(FaceV:Enum.NormalId, Parent:Instance|{}, TextureTypeV:string)
+	if IsTable() then
+		local tab = {}
+		for i,v in pairs(Parent) do
+			tab[i] = {
+				Part = Parent,
+				Face = FaceV or Enum.NormalId.Front,
+				TextureType = TextureTypeV or "Decal"
+			}
+		end
+		
+		local args = {
+			"CreateTextures",
+			tab
+		}
+		
+		SyncAPI:Invoke(unpack(args))
+	end
+	
 	SyncAPI:Invoke(
 		"CreateTextures",
 		{
@@ -718,27 +862,53 @@ function F3XModule.CreateTexture(FaceV:Enum.NormalId, Parent:Instance, TextureTy
 end
 
 function F3XModule.UpdateTexture(FaceV:Enum.NormalId, Parent:Instance, TextureId:number, TransparencyV:number, TextureTypeV:string)
-	local args = {
-		"SyncTexture",
-		{
-			{
+	if IsTable(Parent) then
+		local tab = {}
+		for i,v in pairs(Parent) do
+			tab[i] = {
 				Part = Parent,
 				Face = FaceV,
 				TextureType = TextureTypeV or "Decal",
 				Texture = "rbxassetid://"..getImageIdFromAssetId(TextureId),
 				Transparency = TransparencyV
 			}
+		end
+		
+		local args = {
+			"SyncTexture",
+			tab
 		}
-	}
-	ServerEndpoint:InvokeServer(unpack(args))
+		ServerEndpoint:InvokeServer(unpack(args))
+	else			
+		local args = {
+			"SyncTexture",
+			{
+				{
+					Part = Parent,
+					Face = FaceV,
+					TextureType = TextureTypeV or "Decal",
+					Texture = "rbxassetid://"..getImageIdFromAssetId(TextureId),
+					Transparency = TransparencyV
+				}
+			}
+		}
+		ServerEndpoint:InvokeServer(unpack(args))	
+	end
 end
 
-function F3XModule.QuickTexture(Parts:{BasePart}, TextureId:number, Transparency:number|nil, Face:Enum.NormalId, TextureType:string)
-	for i,v in pairs(Parts) do
-		if not v:IsA("BasePart") then continue end
+function F3XModule.QuickTexture(BasePart:BasePart|{BasePart}, TextureId:number, Transparency:number|nil, Face:Enum.NormalId, TextureType:string)
+	if IsTable(BasePart) then
+		for i,v in pairs(BasePart) do
+			if not v:IsA("BasePart") then continue end
+			task.spawn(function()
+				F3XModule.CreateTexture(Face, v, TextureType)
+				F3XModule.UpdateTexture(Face, v, TextureId, Transparency, TextureType)
+			end)
+		end
+	else	
 		task.spawn(function()
-			F3XModule.CreateTexture(Face, v, TextureType)
-			F3XModule.UpdateTexture(Face, v, TextureId, Transparency, TextureType)
+			F3XModule.CreateTexture(Face, BasePart, TextureType)
+			F3XModule.UpdateTexture(Face, BasePart, TextureId, Transparency, TextureType)
 		end)
 	end
 end
@@ -774,77 +944,172 @@ function F3XModule.BreakWelds(Parts:{BasePart})
 end
 
 function F3XModule.SetPartTransparency(BasePart:BasePart, TransparencyV:number)
-	SyncAPI:Invoke(
-		"SyncMaterial",
-		{
-			{
-				Part = BasePart,
+	if IsTable(BasePart) then
+		local tab = {}
+		
+		for i,v in pairs(BasePart) do
+			tab[#tab+1] = {
+				Part = v,
 				Transparency = TransparencyV
 			}
+		end
+		local args = {
+			"SyncMaterial",
+			tab
 		}
-	)
-end
-
-function F3XModule.SetPartReflectance(BasePart:BasePart, ReflectanceV:number)
-	SyncAPI:Invoke(
-		"SyncMaterial",
-		{
-			{
-				Part = BasePart,
-				Reflectance = ReflectanceV
-			}
-		}
-	)
-end
-
-function F3XModule.SetPartMaterial(BasePart:BasePart, MaterialV:Enum.Material)
-	SyncAPI:Invoke(
-		"SyncMaterial",
-		{
-			{
-				Part = BasePart,
-				Material = MaterialV
-			}
-		}
-	)
-end
-
-function F3XModule.CreateMesh(BasePart:BasePart)
-	task.spawn(function()
-		SyncAPI:Invoke(
-			"CreateMeshes",
-			{
-				{
-					Part = BasePart
-				}
-			}
-		)
-	end)
-end
-
-function F3XModule.UpdateMesh(BasePart:BasePart, MeshIdV:number|nil, MeshTextureIdV:number|nil, MeshTypeV:Enum.MeshType|nil, MeshScale:Vector3|nil, MeshOffset:Vector3|nil, VertexColorV:Vector3|nil)
-	task.spawn(function()
-		SyncAPI:Invoke(
-			"SyncMesh",
+		
+		SyncAPI:Invoke(unpack(args))
+	else	
+		local args = {
+			"SyncMaterial",
 			{
 				{
 					Part = BasePart,
-					MeshType = MeshTypeV or Enum.MeshType.FileMesh,
-					MeshId = "rbxassetid://"..(MeshIdV or 0),
-					TextureId = "rbxassetid://"..(MeshTextureIdV or 0),
-					Scale = MeshScale or Vector3.new(1,1,1),
-					Offset = MeshOffset or Vector3.zero,
-					VertexColor = VertexColorV or Vector3.new(1,1,1)
+					Transparency = TransparencyV
+				}
+			}
+		}
+		SyncAPI:Invoke(unpack(args))
+	end
+end
+
+function F3XModule.SetPartReflectance(BasePart:BasePart, ReflectanceV:number)
+	if IsTable(BasePart) then
+		local tab = {}
+		
+		for i,v in pairs(BasePart) do
+			tab[#tab+1] = {
+				Part = v,
+				Reflectance = ReflectanceV
+			}
+		end
+		local args = {
+			"SyncMaterial",
+			tab
+		}
+		
+		SyncAPI:Invoke(unpack(args))
+	else	
+		SyncAPI:Invoke(
+			"SyncMaterial",
+			{
+				{
+					Part = BasePart,
+					Reflectance = ReflectanceV
 				}
 			}
 		)
-	end)
+	end
 end
 
-function F3XModule.QuickMesh(BasePart:BasePart, MeshArguments:{MeshIdV:number|nil, MeshTextureIdV:number|nil, MeshTypeV:Enum.MeshType|nil, MeshScale:Vector3|nil, MeshOffset:Vector3|nil, VertexColorV:Vector3|nil})
-	local MeshIdV, MeshTextureIdV, MeshTypeV, MeshScale, MeshOffset, VertexColorV = table.unpack(MeshArguments)
-	F3XModule.CreateMesh(BasePart)
-	F3XModule.UpdateMesh(BasePart, MeshIdV, MeshTextureIdV, MeshTypeV, MeshScale, MeshOffset, VertexColorV)
+function F3XModule.SetPartMaterial(BasePart:BasePart, MaterialV:Enum.Material)
+	if IsTable(BasePart) then
+		local tab = {}
+		
+		for i,v in pairs(BasePart) do
+			tab[#tab+1] = {
+				Part = v,
+				Material = MaterialV
+			}
+		end
+		local args = {
+			"SyncMaterial",
+			tab
+		}
+		
+		SyncAPI:Invoke(unpack(args))
+	else	
+		SyncAPI:Invoke(
+			"SyncMaterial",
+			{
+				{
+					Part = BasePart,
+					Material = MaterialV
+				}
+			}
+		)
+	end
+end
+
+function F3XModule.CreateMesh(BasePart:BasePart)
+	if IsTable(BasePart) then
+		local tab = {}
+		for i,v in pairs(BasePart) do
+			tab[#tab+1] = {
+				Part = v
+			}
+		end
+		
+		local args = {
+			"CreateMeshes",
+			tab
+		}
+		SyncAPI:Invoke(unpack(args))
+	else	
+		local args = {
+			"CreateMeshes",
+			{
+				{
+					"CreateMeshes",
+					Part = BasePart
+				}
+			}
+		}
+		SyncAPI:Invoke(unpack(args))
+	end
+end
+
+function F3XModule.UpdateMesh(BasePart:BasePart, MeshIdV:number|nil, MeshTextureIdV:number|nil, MeshTypeV:Enum.MeshType|nil, MeshScale:Vector3|nil, MeshOffset:Vector3|nil, VertexColorV:Vector3|nil)
+	if IsTable(BasePart) then
+		local tab = {}
+		for i,v in pairs(BasePart) do
+			tab[#tab+1] = {
+				Part = v,
+				MeshType = MeshTypeV or Enum.MeshType.FileMesh,
+				MeshId = "rbxassetid://"..(MeshIdV or 0),
+				TextureId = "rbxassetid://"..(MeshTextureIdV or 0),
+				Scale = MeshScale or Vector3.new(1,1,1),
+				Offset = MeshOffset or Vector3.zero,
+				VertexColor = VertexColorV or Vector3.new(1,1,1)
+			}
+		end
+		local args = {
+			"SyncMesh",
+			tab
+		}
+		SyncAPI:Invoke(unpack(args))
+	else
+		task.spawn(function()
+			SyncAPI:Invoke(
+				"SyncMesh",
+				{
+					{
+						Part = BasePart,
+						MeshType = MeshTypeV or Enum.MeshType.FileMesh,
+						MeshId = "rbxassetid://"..(MeshIdV or 0),
+						TextureId = "rbxassetid://"..(MeshTextureIdV or 0),
+						Scale = MeshScale or Vector3.new(1,1,1),
+						Offset = MeshOffset or Vector3.zero,
+						VertexColor = VertexColorV or Vector3.new(1,1,1)
+					}
+				}
+			)
+		end)
+	end
+end
+
+function F3XModule.QuickMesh(BasePart:BasePart|{}, MeshArguments:{MeshIdV:number|nil, MeshTextureIdV:number|nil, MeshTypeV:Enum.MeshType|nil, MeshScale:Vector3|nil, MeshOffset:Vector3|nil, VertexColorV:Vector3|nil})
+	if IsTable(BasePart) then
+		for i,v in pairs(BasePart) do
+			local MeshIdV, MeshTextureIdV, MeshTypeV, MeshScale, MeshOffset, VertexColorV = table.unpack(MeshArguments)
+			F3XModule.CreateMesh(BasePart)
+			F3XModule.UpdateMesh(v, MeshIdV, MeshTextureIdV, MeshTypeV, MeshScale, MeshOffset, VertexColorV)
+		end
+	else
+		local MeshIdV, MeshTextureIdV, MeshTypeV, MeshScale, MeshOffset, VertexColorV = table.unpack(MeshArguments)
+		F3XModule.CreateMesh(BasePart)
+		F3XModule.UpdateMesh(BasePart, MeshIdV, MeshTextureIdV, MeshTypeV, MeshScale, MeshOffset, VertexColorV)
+	end
 end
 
 function F3XModule.SetLocked(Inst:BasePart | {BasePart}, IsLocked:boolean)
@@ -1413,13 +1678,13 @@ end
 local Plugins = {}
 if getgenv().F3XModule_Settings.UsePlugins == true then
 	print("Loading...",true)
-	
+
 	function getfiles(path)
 		if not listfiles then return {} end
 		local s, result = pcall(function() return listfiles(path) end)
 		return s and result or {}
 	end
-	
+
 	function addPlugin(name)
 		local fileName = name
 		if not name:match("%.btoolsmodule$") then
