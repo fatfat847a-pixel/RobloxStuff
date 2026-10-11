@@ -1,4 +1,4 @@
--- Version: 1.3.0
+-- Version: 1.3.9
 
 --[[
 This module was made by: Zaya_Blaze, https://scriptblox.com/u/Zaya.
