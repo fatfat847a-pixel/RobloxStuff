@@ -1,4 +1,4 @@
--- Version: 1.3.9
+-- Version: 1.4.0
 
 --[[
 This module was made by: Zaya_Blaze, https://scriptblox.com/u/Zaya.
@@ -1834,7 +1834,7 @@ end
 local updatesresponse = LoadUpdates()
 
 if updatesresponse then
-	return loadstring(updatesresponse)
+	return loadstring(updatesresponse)()
 else	
 	return MainMod()
 end
