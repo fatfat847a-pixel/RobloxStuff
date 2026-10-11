@@ -1,4 +1,5 @@
 local F3XModule = {}
+--Version: 1.3.0
 
 --[[
 This module was made by: Zaya_Blaze, https://scriptblox.com/u/Zaya.
@@ -16,6 +17,56 @@ end
 
 return F3XModulePlugin
 ]]
+
+local function LoadUpdates()
+	local resp = game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
+	local version,current = nil,nil
+	local folderPath,versionfile = "F3XModule", "Version.txt"
+
+	if resp then
+		local str = tostring(resp)
+
+		if isfolder(folderPath) then
+			if isfile(folderPath.."/"..versionfile) then
+				current = readfile(folderPath.."/"..versionfile)
+			end
+		end
+
+		if str:match("Version: ") then
+			version = str:match("Version: (.+)")
+		end
+
+		if version and current and version ~= current then
+			writefile(folderPath.."/F3XModule.btools","--Loaded"..str)
+			return readfile(folderPath.."/F3XModule.btools")
+		else	
+			if isfolder(folderPath) then
+				if isfile(folderPath.."/"..versionfile) then
+					local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
+					local oldstr = readfile(folderPath.."/F3XModule.btools")
+
+					if string.match(oldstr, "--Loaded") then
+						return nil
+					else		
+						return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
+					end
+				end
+			end	
+		end
+	else	
+		if isfolder(folderPath) then
+			if isfile(folderPath.."/"..versionfile) then
+				local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
+				return readfile(folderPath.."/F3XModule.btools") or game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
+			end
+		end	
+	end
+end
+local updatesresponse = LoadUpdates()
+
+if updatesresponse ~= nil then
+	return loadstring(updatesresponse)
+end
 
 F3XModule.IsModuleReady = false
 F3XModule.PluginsLoaded = false
