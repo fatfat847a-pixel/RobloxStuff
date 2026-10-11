@@ -1,3 +1,5 @@
+local F3XModule = {}
+
 --[[
 This module was made by: Zaya_Blaze, https://scriptblox.com/u/Zaya.
 ]]
@@ -15,13 +17,26 @@ end
 return F3XModulePlugin
 ]]
 
+F3XModule.IsModuleReady = false
+F3XModule.PluginsLoaded = false
+
+getgenv().F3XConnections = {}
+
 if not getgenv().F3XModule_Settings then
 	getgenv().F3XModule_Settings = {
 		UseCustomPrint = true,
 		UsePlugins = true,
-		DoNotUpdate = false
 	}
 end
+
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local SyncAPI, ServerEndpoint
+local TimeoutWarnings, MaxTimeoutWarnings, ReachedTimeoutWarningMax = 0, 10, false
 
 local warn = function(words, HasPrintLogo, LogoExtra)
 	if getgenv().F3XModule_Settings.UseCustomPrint == false then return warn(words) end
@@ -46,22 +61,6 @@ local print = function(words, HasPrintLogo, LogoExtra)
 		print(LogoExtra.."[F3XModule]: "..words)
 	end
 end
-
-local F3XModule = {}
-
-F3XModule.IsModuleReady = false
-F3XModule.PluginsLoaded = false
-
-getgenv().F3XConnections = {}
-
-local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-local HttpService = game:GetService("HttpService")
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local SyncAPI, ServerEndpoint
-local TimeoutWarnings, MaxTimeoutWarnings, ReachedTimeoutWarningMax = 0, 10, false
 
 local function FindSyncAPI(plr)
 	for i,v in pairs(plr.Character:GetDescendants()) do
@@ -403,7 +402,7 @@ function F3XModule.ResizePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFr
 				Size = SizeV
 			}
 		end
-
+		
 		SyncAPI:Invoke(
 			"SyncResize",
 			tab
@@ -478,7 +477,7 @@ end
 
 function F3XModule.CreateEffect(Parent:Instance|{BasePart:BasePart}, EffectType:string)
 	EffectType = CapitalizeFirst(EffectType)
-
+	
 	if IsTable(Parent) then
 		local tab = {}
 
@@ -488,7 +487,7 @@ function F3XModule.CreateEffect(Parent:Instance|{BasePart:BasePart}, EffectType:
 				DecorationType = EffectType
 			}
 		end
-
+		
 		ServerEndpoint:InvokeServer(
 			"CreateDecorations",
 			tab
@@ -642,7 +641,7 @@ function F3XModule.CreateLight(Parent:Instance, LightType:string)
 				LightType = LightType
 			}
 		end
-
+		
 		SyncAPI:Invoke(
 			"CreateLights",
 			tab
@@ -774,14 +773,14 @@ end
 function F3XModule.SetCollision(BasePart:BasePart|{BasePart:BasePart}, CollisionV:boolean)
 	if IsTable(BasePart) then
 		local tab = {}
-
+		
 		for i,v in pairs(BasePart) do
 			tab[i] ={
 				Part = v,
 				CanCollide = CollisionV
 			}
 		end
-
+		
 		local args = {
 			"SyncCollision",
 			tab
@@ -841,15 +840,15 @@ function F3XModule.CreateTexture(FaceV:Enum.NormalId, Parent:Instance|{}, Textur
 				TextureType = TextureTypeV or "Decal"
 			}
 		end
-
+		
 		local args = {
 			"CreateTextures",
 			tab
 		}
-
+		
 		SyncAPI:Invoke(unpack(args))
 	end
-
+	
 	SyncAPI:Invoke(
 		"CreateTextures",
 		{
@@ -874,7 +873,7 @@ function F3XModule.UpdateTexture(FaceV:Enum.NormalId, Parent:Instance, TextureId
 				Transparency = TransparencyV
 			}
 		end
-
+		
 		local args = {
 			"SyncTexture",
 			tab
@@ -947,7 +946,7 @@ end
 function F3XModule.SetPartTransparency(BasePart:BasePart, TransparencyV:number)
 	if IsTable(BasePart) then
 		local tab = {}
-
+		
 		for i,v in pairs(BasePart) do
 			tab[#tab+1] = {
 				Part = v,
@@ -958,7 +957,7 @@ function F3XModule.SetPartTransparency(BasePart:BasePart, TransparencyV:number)
 			"SyncMaterial",
 			tab
 		}
-
+		
 		SyncAPI:Invoke(unpack(args))
 	else	
 		local args = {
@@ -977,7 +976,7 @@ end
 function F3XModule.SetPartReflectance(BasePart:BasePart, ReflectanceV:number)
 	if IsTable(BasePart) then
 		local tab = {}
-
+		
 		for i,v in pairs(BasePart) do
 			tab[#tab+1] = {
 				Part = v,
@@ -988,7 +987,7 @@ function F3XModule.SetPartReflectance(BasePart:BasePart, ReflectanceV:number)
 			"SyncMaterial",
 			tab
 		}
-
+		
 		SyncAPI:Invoke(unpack(args))
 	else	
 		SyncAPI:Invoke(
@@ -1006,7 +1005,7 @@ end
 function F3XModule.SetPartMaterial(BasePart:BasePart, MaterialV:Enum.Material)
 	if IsTable(BasePart) then
 		local tab = {}
-
+		
 		for i,v in pairs(BasePart) do
 			tab[#tab+1] = {
 				Part = v,
@@ -1017,7 +1016,7 @@ function F3XModule.SetPartMaterial(BasePart:BasePart, MaterialV:Enum.Material)
 			"SyncMaterial",
 			tab
 		}
-
+		
 		SyncAPI:Invoke(unpack(args))
 	else	
 		SyncAPI:Invoke(
@@ -1040,7 +1039,7 @@ function F3XModule.CreateMesh(BasePart:BasePart)
 				Part = v
 			}
 		end
-
+		
 		local args = {
 			"CreateMeshes",
 			tab
@@ -1678,6 +1677,8 @@ end
 
 local Plugins = {}
 if getgenv().F3XModule_Settings.UsePlugins == true then
+	print("Loading...",true)
+
 	function getfiles(path)
 		if not listfiles then return {} end
 		local s, result = pcall(function() return listfiles(path) end)
@@ -1686,65 +1687,67 @@ if getgenv().F3XModule_Settings.UsePlugins == true then
 
 	function addPlugin(name)
 		local fileName = name
-		if name:match("%.btoolsmodule$") then
-			local success, source = pcall(readfile, fileName)
-			if not success or not source then
-				success, source = pcall(readfile, "/" .. fileName)
-			end
-
-			if not success or not source then
-				warn("Could not read plugin file:", fileName)
-				return
-			end
-
-			local chunk, compileErr = loadstring(source)
-			if not chunk then
-				warn("Failed to compile plugin", fileName, compileErr)
-				return
-			end
-
-			local ok, plugin = pcall(chunk)
-			if not ok then
-				warn("Error while running plugin", fileName, plugin)
-				return
-			end
-
-			if type(plugin) ~= "table" then
-				warn("Plugin", fileName, "did not return a table")
-				return
-			end
-
-			if type(plugin.func) ~= "function" then
-				warn("Plugin", fileName, "has no .func function")
-				return
-			end
-
-			local pluginName = plugin.Name or fileName:gsub("%.btoolsmodule$", "")
-			Plugins[#Plugins+1] = pluginName
-			F3XModule[pluginName] = function(...)
-				return plugin.func(F3XModule, ...)
-			end
+		if not name:match("%.btoolsmodule$") then
+			fileName = name .. ".btoolsmodule"
 		end
 
-		task.spawn(function()
-			if not isfile("F3XModule") then
-				makefolder("F3XModule")
-			end
-			local files = getfiles("F3XModule")
+		local success, source = pcall(readfile, fileName)
+		if not success or not source then
+			success, source = pcall(readfile, "/" .. fileName)
+		end
 
-			for _, file in pairs(files) do
-				addPlugin(file)
-			end
+		if not success or not source then
+			warn("Could not read plugin file:", fileName)
+			return
+		end
 
-			F3XModule.PluginsLoaded = true
-		end)
+		local chunk, compileErr = loadstring(source)
+		if not chunk then
+			warn("Failed to compile plugin", fileName, compileErr)
+			return
+		end
+
+		local ok, plugin = pcall(chunk)
+		if not ok then
+			warn("Error while running plugin", fileName, plugin)
+			return
+		end
+
+		if type(plugin) ~= "table" then
+			warn("Plugin", fileName, "did not return a table")
+			return
+		end
+
+		if type(plugin.func) ~= "function" then
+			warn("Plugin", fileName, "has no .func function")
+			return
+		end
+
+		local pluginName = plugin.Name or fileName:gsub("%.btoolsmodule$", "")
+		Plugins[#Plugins+1] = pluginName
+		F3XModule[pluginName] = function(...)
+			return plugin.func(F3XModule, ...)
+		end
 	end
+
+	task.spawn(function()
+		if not isfile("F3XModule") then
+			makefolder("F3XModule")
+		end
+		local files = getfiles("F3XModule")
+
+		for _, file in pairs(files) do
+			addPlugin(file)
+		end
+
+		F3XModule.PluginsLoaded = true
+	end)
 end
 
 local timeout = 30
 
 if F3XModule.IsModuleReady and F3XModule.PluginsLoaded then
-	print("F3XModule Loaded!",true, "[v"..Ver.."]")
+	print("F3XModule Loaded!",true)
 	return F3XModule
 else	
 	print("Loading...",true)
@@ -1755,15 +1758,16 @@ else
 	(F3XModule.IsModuleReady and F3XModule.PluginsLoaded) or timeout <= 0
 
 	if timeout <= 0 then
-		warn(tostring("Timed out; SyncAPIFound="..tostring((SyncAPI ~= nil)..", ServerEndpointFound="..tostring((ServerEndpoint ~= nil))),true), "[v"..Ver.."]")
+		warn("Timed out; SyncAPIFound="..tostring((SyncAPI ~= nil)..", ServerEndpointFound="..tostring((ServerEndpoint ~= nil)),true))
 		return
 	end
 
 	if #Plugins > 0 then
-		print("F3XModule Loaded with ("..#Plugins..") Plugins:", table.concat(Plugins, ", "),true, "[v"..Ver.."]")
+		print("F3XModule Loaded with ("..#Plugins..") Plugins:", table.concat(Plugins, ", "),true)
 	else	
-		print("F3XModule Loaded!", true, "[v"..Ver.."]")
+		print("F3XModule Loaded!", true)
 	end
 
+	getgenv().F3XModule = F3XModule
 	return F3XModule
 end
