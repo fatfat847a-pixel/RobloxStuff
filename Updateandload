@@ -1,1 +1,38 @@
-a
+local resp = game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
+local version,current = nil,nil
+local folderPath,versionfile = "F3XModule", "Version.txt"
+
+if resp then
+	local str = tostring(resp)
+	
+	if isfolder(folderPath) then
+		if isfile(folderPath.."/"..versionfile) then
+			current = readfile(folderPath.."/"..versionfile)
+		end
+	end
+
+	if str:match("Version: ") then
+		version = str:match("Version: (.+)")
+	end
+
+	if version and current and version ~= current then
+		local loader = game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/Updateandload")
+
+		writefile(folderPath.."/F3XModule.btools",loader..str)
+		return loadstring(readfile(folderPath.."/F3XModule.btools"))()
+	else	
+		if isfolder(folderPath) then
+			if isfile(folderPath.."/"..versionfile) then
+				local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
+				return loadstring(readfile(folderPath.."/F3XModule.btools"))() or loadstring(game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua"))()
+			end
+		end	
+	end
+else	
+	if isfolder(folderPath) then
+		if isfile(folderPath.."/"..versionfile) then
+			local old = (isfile(folderPath.."/F3XModule.btools") and readfile(folderPath.."/F3XModule.btools"))
+			return loadstring(readfile(folderPath.."/F3XModule.btools"))() or loadstring(game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua"))()
+		end
+	end	
+end
