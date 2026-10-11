@@ -1,4 +1,4 @@
--- Version: 1.4.2
+-- Version: 1.4.3
 
 --[[
 This module was made by: Zaya_Blaze, https://scriptblox.com/u/Zaya.
@@ -50,7 +50,7 @@ local print = function(words, HasPrintLogo, LogoExtra)
 end
 
 local function LoadUpdates()
-	if F3XModule_Settings.DoNotUpdate then return nil end
+	if F3XModule_Settings.DoNotUpdate then return end
 	local resp = game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
 	local version,current = nil,nil
 	local folderPath,versionfile = "F3XModule", "Version.txt"
@@ -1745,61 +1745,59 @@ local MainMod = function()
 
 		function addPlugin(name)
 			local fileName = name
-			if not name:match("%.btoolsmodule$") then
-				fileName = name .. ".btoolsmodule"
+			if name:match("%.btoolsmodule$") then
+				local success, source = pcall(readfile, fileName)
+				if not success or not source then
+					success, source = pcall(readfile, "/" .. fileName)
+				end
+
+				if not success or not source then
+					warn("Could not read plugin file:", fileName)
+					return
+				end
+
+				local chunk, compileErr = loadstring(source)
+				if not chunk then
+					warn("Failed to compile plugin", fileName, compileErr)
+					return
+				end
+
+				local ok, plugin = pcall(chunk)
+				if not ok then
+					warn("Error while running plugin", fileName, plugin)
+					return
+				end
+
+				if type(plugin) ~= "table" then
+					warn("Plugin", fileName, "did not return a table")
+					return
+				end
+
+				if type(plugin.func) ~= "function" then
+					warn("Plugin", fileName, "has no .func function")
+					return
+				end
+
+				local pluginName = plugin.Name or fileName:gsub("%.btoolsmodule$", "")
+				Plugins[#Plugins+1] = pluginName
+				F3XModule[pluginName] = function(...)
+					return plugin.func(F3XModule, ...)
+				end
 			end
 
-			local success, source = pcall(readfile, fileName)
-			if not success or not source then
-				success, source = pcall(readfile, "/" .. fileName)
-			end
+			task.spawn(function()
+				if not isfile("F3XModule") then
+					makefolder("F3XModule")
+				end
+				local files = getfiles("F3XModule")
 
-			if not success or not source then
-				warn("Could not read plugin file:", fileName)
-				return
-			end
+				for _, file in pairs(files) do
+					addPlugin(file)
+				end
 
-			local chunk, compileErr = loadstring(source)
-			if not chunk then
-				warn("Failed to compile plugin", fileName, compileErr)
-				return
-			end
-
-			local ok, plugin = pcall(chunk)
-			if not ok then
-				warn("Error while running plugin", fileName, plugin)
-				return
-			end
-
-			if type(plugin) ~= "table" then
-				warn("Plugin", fileName, "did not return a table")
-				return
-			end
-
-			if type(plugin.func) ~= "function" then
-				warn("Plugin", fileName, "has no .func function")
-				return
-			end
-
-			local pluginName = plugin.Name or fileName:gsub("%.btoolsmodule$", "")
-			Plugins[#Plugins+1] = pluginName
-			F3XModule[pluginName] = function(...)
-				return plugin.func(F3XModule, ...)
-			end
+				F3XModule.PluginsLoaded = true
+			end)
 		end
-
-		task.spawn(function()
-			if not isfile("F3XModule") then
-				makefolder("F3XModule")
-			end
-			local files = getfiles("F3XModule")
-
-			for _, file in pairs(files) do
-				addPlugin(file)
-			end
-
-			F3XModule.PluginsLoaded = true
-		end)
 	end
 
 	local timeout = 30
