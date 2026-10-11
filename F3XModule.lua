@@ -1,5 +1,5 @@
 local F3XModule = {}
--- Version: 1.3.0
+-- Version: 1.3.6
 
 --[[
 This module was made by: Zaya_Blaze, https://scriptblox.com/u/Zaya.
@@ -55,7 +55,7 @@ local function LoadUpdates()
 	local resp = game:HttpGet("https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua")
 	local version,current = nil,nil
 	local folderPath,versionfile = "F3XModule", "Version.txt"
-	local commenter = string.format("U+002D")..string.format("U+002D")
+	local commenter = string.char(0x002D)..string.char(0x002D)
 	
 	if resp then
 		local str = tostring(resp)
