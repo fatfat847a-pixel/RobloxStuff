@@ -67,7 +67,7 @@ local function LoadUpdates()
 		end
 
 		if str:match("Version: ") then
-			version = string.sub(str:match("Version: (.+)"),9)
+			version = (str:match("%-%-%[%[ Version: ([%d%.]+) %]%]") or str:match("Version:%s*([%d%.]+)"))
 		end
 		
 		if version and current and version ~= current then
