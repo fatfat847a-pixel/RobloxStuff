@@ -391,14 +391,14 @@ function F3XModule.ColorPart(BasePart:BasePart|{BasePart:BasePart}, Color3RGB:Co
 	end
 end
 
-function F3XModule.ResizePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFrame, SizeV:Vector3)
+function F3XModule.ResizePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFrame|nil, SizeV:Vector3)
 	if IsTable(BasePart) then
 		local tab = {}
 
 		for i,v in pairs(BasePart) do
 			tab[i] = {
 				Part = v,
-				CFrame = CFrameV,
+				CFrame = (CFrameV or v.CFrame),
 				Size = SizeV
 			}
 		end
@@ -413,7 +413,7 @@ function F3XModule.ResizePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFr
 			{
 				{
 					Part = BasePart,
-					CFrame = CFrameV,
+					CFrame = (CFrameV or BasePart.CFrame),
 					Size = SizeV
 				}
 			}
@@ -421,14 +421,14 @@ function F3XModule.ResizePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFr
 	end
 end
 
-function F3XModule.MovePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFrame)
+function F3XModule.MovePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFrame|nil)
 	if IsTable(BasePart) then
 		local tab = {}
 
 		for i,v in pairs(BasePart) do
 			tab[i] = {
 				Part = v,
-				CFrame = CFrameV
+				CFrame = (CFrameV or v.CFrame)
 			}
 		end
 		SyncAPI:Invoke(
@@ -441,21 +441,21 @@ function F3XModule.MovePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFram
 			{
 				{
 					Part = BasePart,
-					CFrame = CFrameV
+					CFrame = (CFrameV or BasePart.CFrame)
 				}
 			}
 		)
 	end
 end
 
-function F3XModule.RotatePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFrame)
+function F3XModule.RotatePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFrame|nil)
 	if IsTable(BasePart) then
 		local tab = {}
 
 		for i,v in pairs(BasePart) do
 			tab[i] = {
 				Part = v,
-				CFrame = CFrameV
+				CFrame = (CFrameV or v.CFrame)
 			}
 		end
 		SyncAPI:Invoke(
@@ -468,7 +468,7 @@ function F3XModule.RotatePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFr
 			{
 				{
 					Part = BasePart,
-					CFrame = CFrameV
+					CFrame = (CFrameV or BasePart.CFrame)
 				}
 			}
 		)
