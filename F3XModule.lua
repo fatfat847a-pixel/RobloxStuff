@@ -376,7 +376,7 @@ function F3XModule.GetPartFromCF(CF:CFrame, Recursive:boolean|nil):BasePart|nil
 		end
 	end
 	olp.FilterDescendantsInstances = ignores
-	olp.FilterType = Enum.FilterType.Exclude
+	olp.FilterType = Enum.RaycastFilterType.Exclude
 	olp.MaxParts = 1
 	
 	local rcp = Instance.new("Part",workspace)
@@ -404,7 +404,7 @@ function F3XModule.GetPartFromCF(CF:CFrame, Recursive:boolean|nil):BasePart|nil
 	end
 end
 
-function F3XModule.CreatePart(CFrameV:CFrame, Parent:Instance, PartType:string):BasePart|nil
+function F3XModule.CreatePart(CFrameV:CFrame, Parent:Instance|nil, PartType:string|nil):BasePart|nil
 	local types = {
 		"Normal",
 		"Truss",
