@@ -367,7 +367,7 @@ function F3XModule.RecolorHandle(BrickColorV:BrickColor)
 	end)
 end
 
-function F3XModule.GetPartFromCF(CF:CFrame):BasePart|nil
+function F3XModule.GetPartFromCF(CF:CFrame, Recursive:boolean|nil):BasePart|nil
 	local ignores = {}
 	local olp = OverlapParams.new()
 	for i,v in pairs(game:GetService("Players"):GetPlayers()) do
@@ -390,12 +390,16 @@ function F3XModule.GetPartFromCF(CF:CFrame):BasePart|nil
 	
 	local parts = workspace:GetPartsInPart(rcp,olp)
 	if parts ~= nil and #parts > 0 then
-		if not (parts[1].Size ~= Vector3.new(4, 1, 2) or parts[1].Size ~= Vector3.new(4, 1.2, 2) or parts[1].Size ~= Vector3.new(2, 2, 2)) then
+		if (not (parts[1].Size ~= Vector3.new(4, 1, 2) or parts[1].Size ~= Vector3.new(4, 1.2, 2) or parts[1].Size ~= Vector3.new(2, 2, 2)) and parts[1].CFrame == CF) then
 			rcp:Destroy()
 			return parts[1]
 		else
-			rcp:Destroy()
-			return nil
+			if Recursive ~= nil and Recursive == true then
+				return F3XModule.GetPartFromCF(CF, false)
+			else	
+				rcp:Destroy()
+				return nil
+			end
 		end
 	end
 end
