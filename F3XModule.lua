@@ -367,7 +367,38 @@ function F3XModule.RecolorHandle(BrickColorV:BrickColor)
 	end)
 end
 
-function F3XModule.CreatePart(CFrameV:CFrame, Parent:Instance, PartType:string)
+function F3XModule.GetPartFromCF(CF:CFrame):BasePart|nil
+	local ignores = {}
+	local olp = OverlapParams.new()
+	for i,v in pairs(game:GetService("Players"):GetPlayers()) do
+		if v.Character then
+			ignores[#ignores+1] = v.Character
+		end
+	end
+	olp.FilterDescendantsInstances = ignores
+	olp.FilterType = Enum.FilterType.Exclude
+	olp.MaxParts = 1
+	
+	local rcp = Instance.new("Part",workspace)
+	rcp.CanTouch = false
+	rcp.CanCollide = false
+	rcp.CanQuery = false
+	rcp.Anchored = true
+	rcp.LocalTransparencyModifier = 1
+	rcp.Size = Vector3.new(0.001,0.001,0.001)
+	rcp.CFrame = CF
+	
+	local parts = workspace:GetPartsInPart(rcp,olp)
+	if parts ~= nil and #parts > 0 then
+		if not (parts[1].Size ~= Vector3.new(4, 1, 2) or parts[1].Size ~= Vector3.new(4, 1.2, 2) or parts[1].Size ~= Vector3.new(2, 2, 2)) then
+			return parts[1]
+		else
+			return nil
+		end
+	end
+end
+
+function F3XModule.CreatePart(CFrameV:CFrame, Parent:Instance, PartType:string):BasePart|nil
 	local types = {
 		"Normal",
 		"Truss",
@@ -382,11 +413,18 @@ function F3XModule.CreatePart(CFrameV:CFrame, Parent:Instance, PartType:string)
 
 	local args = {
 		"CreatePart",
-		PartType,
+		(PartType or "Normal"),
 		CFrameV,
 		Parent
 	}
 	SyncAPI:Invoke(unpack(args))
+
+	local newpart = F3XModule.GetPartFromCF(CFrameV)
+	if newpart then
+		return newpart
+	else
+		return nil
+	end
 end
 
 function F3XModule.ColorPart(BasePart:BasePart|{BasePart:BasePart}, Color3RGB:Color3)
