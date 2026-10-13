@@ -421,7 +421,7 @@ function F3XModule.CreatePart(CFrameV:CFrame, Parent:Instance, PartType:string):
 		"CreatePart",
 		(PartType or "Normal"),
 		CFrameV,
-		Parent
+		(Parent or workspace)
 	}
 	SyncAPI:Invoke(unpack(args))
 
