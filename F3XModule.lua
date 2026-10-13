@@ -391,8 +391,10 @@ function F3XModule.GetPartFromCF(CF:CFrame):BasePart|nil
 	local parts = workspace:GetPartsInPart(rcp,olp)
 	if parts ~= nil and #parts > 0 then
 		if not (parts[1].Size ~= Vector3.new(4, 1, 2) or parts[1].Size ~= Vector3.new(4, 1.2, 2) or parts[1].Size ~= Vector3.new(2, 2, 2)) then
+			rcp:Destroy()
 			return parts[1]
 		else
+			rcp:Destroy()
 			return nil
 		end
 	end
