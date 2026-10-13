@@ -385,19 +385,18 @@ function F3XModule.GetPartFromCF(CF:CFrame, Recursive:boolean|nil):BasePart|nil
 	rcp.CanQuery = false
 	rcp.Anchored = true
 	rcp.LocalTransparencyModifier = 1
-	rcp.Size = Vector3.new(0.001,0.001,0.001)
+	rcp.Size = Vector3.new(1,1,1)
 	rcp.CFrame = CF
 	
 	local parts = workspace:GetPartsInPart(rcp,olp)
+	rcp.Parent = nil
 	if parts ~= nil and #parts > 0 then
-		if (not (parts[1].Size ~= Vector3.new(4, 1, 2) or parts[1].Size ~= Vector3.new(4, 1.2, 2) or parts[1].Size ~= Vector3.new(2, 2, 2)) and parts[1].CFrame == CF) then
-			rcp:Destroy()
+		if parts[1].CFrame == CF then
 			return parts[1]
 		else
 			if Recursive ~= nil and Recursive == true then
 				return F3XModule.GetPartFromCF(CF, false)
 			else	
-				rcp:Destroy()
 				return nil
 			end
 		end
@@ -425,12 +424,7 @@ function F3XModule.CreatePart(CFrameV:CFrame, Parent:Instance|nil, PartType:stri
 	}
 	SyncAPI:Invoke(unpack(args))
 
-	local newpart = F3XModule.GetPartFromCF(CFrameV)
-	if newpart then
-		return newpart
-	else
-		return nil
-	end
+	return F3XModule.GetPartFromCF(CFrameV,true)
 end
 
 function F3XModule.ColorPart(BasePart:BasePart|{BasePart:BasePart}, Color3RGB:Color3)
