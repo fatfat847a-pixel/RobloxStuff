@@ -17,6 +17,8 @@ end
 return F3XModulePlugin
 ]]
 
+local F3XModuleRepository = "https://raw.githubusercontent.com/fatfat847a-pixel/RobloxStuff/refs/heads/main/F3XModule.lua"
+
 F3XModule.IsModuleReady = false
 F3XModule.PluginsLoaded = false
 
@@ -46,7 +48,7 @@ local warn = function(words, HasPrintLogo, LogoExtra)
 	if HasPrintLogo == false then
 		warn(words)
 	else	
-		warn(LogoExtra.."[F3XModule]: "..words)
+		warn("[!] "..LogoExtra.."[F3XModule]: "..words)
 	end
 end
 
@@ -60,6 +62,32 @@ local print = function(words, HasPrintLogo, LogoExtra)
 	else	
 		print(LogoExtra.."[F3XModule]: "..words)
 	end
+end
+
+function F3XModule:Reload()
+	local s,response = pcall(function()
+		local loaded = game:HttpGet(F3XModuleRepository)
+
+		if loaded then			
+			return loaded
+		else	
+			return nil
+		end
+	end)
+	if s then
+		if response then
+			getgenv().F3XModule = loadstring(response)()
+			print("Successfully reloaded F3XModule!",true)
+			return getgenv().F3XModule
+		else
+			warn("Error while reloading F3XModule: "..tostring(response),true)
+			return nil
+		end
+	else
+		warn("Error while reloading F3XModule: "..tostring(response),true)
+		return nil
+	end
+	
 end
 
 local function FindSyncAPI(plr)
@@ -402,7 +430,7 @@ function F3XModule.ResizePart(BasePart:BasePart|{BasePart:BasePart}, CFrameV:CFr
 				Size = SizeV
 			}
 		end
-		
+
 		SyncAPI:Invoke(
 			"SyncResize",
 			tab
@@ -477,7 +505,7 @@ end
 
 function F3XModule.CreateEffect(Parent:Instance|{BasePart:BasePart}, EffectType:string)
 	EffectType = CapitalizeFirst(EffectType)
-	
+
 	if IsTable(Parent) then
 		local tab = {}
 
@@ -487,7 +515,7 @@ function F3XModule.CreateEffect(Parent:Instance|{BasePart:BasePart}, EffectType:
 				DecorationType = EffectType
 			}
 		end
-		
+
 		ServerEndpoint:InvokeServer(
 			"CreateDecorations",
 			tab
@@ -641,7 +669,7 @@ function F3XModule.CreateLight(Parent:Instance, LightType:string)
 				LightType = LightType
 			}
 		end
-		
+
 		SyncAPI:Invoke(
 			"CreateLights",
 			tab
@@ -773,14 +801,14 @@ end
 function F3XModule.SetCollision(BasePart:BasePart|{BasePart:BasePart}, CollisionV:boolean)
 	if IsTable(BasePart) then
 		local tab = {}
-		
+
 		for i,v in pairs(BasePart) do
 			tab[i] ={
 				Part = v,
 				CanCollide = CollisionV
 			}
 		end
-		
+
 		local args = {
 			"SyncCollision",
 			tab
@@ -840,15 +868,15 @@ function F3XModule.CreateTexture(FaceV:Enum.NormalId, Parent:Instance|{}, Textur
 				TextureType = TextureTypeV or "Decal"
 			}
 		end
-		
+
 		local args = {
 			"CreateTextures",
 			tab
 		}
-		
+
 		SyncAPI:Invoke(unpack(args))
 	end
-	
+
 	SyncAPI:Invoke(
 		"CreateTextures",
 		{
@@ -873,7 +901,7 @@ function F3XModule.UpdateTexture(FaceV:Enum.NormalId, Parent:Instance, TextureId
 				Transparency = TransparencyV
 			}
 		end
-		
+
 		local args = {
 			"SyncTexture",
 			tab
@@ -946,7 +974,7 @@ end
 function F3XModule.SetPartTransparency(BasePart:BasePart, TransparencyV:number)
 	if IsTable(BasePart) then
 		local tab = {}
-		
+
 		for i,v in pairs(BasePart) do
 			tab[#tab+1] = {
 				Part = v,
@@ -957,7 +985,7 @@ function F3XModule.SetPartTransparency(BasePart:BasePart, TransparencyV:number)
 			"SyncMaterial",
 			tab
 		}
-		
+
 		SyncAPI:Invoke(unpack(args))
 	else	
 		local args = {
@@ -976,7 +1004,7 @@ end
 function F3XModule.SetPartReflectance(BasePart:BasePart, ReflectanceV:number)
 	if IsTable(BasePart) then
 		local tab = {}
-		
+
 		for i,v in pairs(BasePart) do
 			tab[#tab+1] = {
 				Part = v,
@@ -987,7 +1015,7 @@ function F3XModule.SetPartReflectance(BasePart:BasePart, ReflectanceV:number)
 			"SyncMaterial",
 			tab
 		}
-		
+
 		SyncAPI:Invoke(unpack(args))
 	else	
 		SyncAPI:Invoke(
@@ -1005,7 +1033,7 @@ end
 function F3XModule.SetPartMaterial(BasePart:BasePart, MaterialV:Enum.Material)
 	if IsTable(BasePart) then
 		local tab = {}
-		
+
 		for i,v in pairs(BasePart) do
 			tab[#tab+1] = {
 				Part = v,
@@ -1016,7 +1044,7 @@ function F3XModule.SetPartMaterial(BasePart:BasePart, MaterialV:Enum.Material)
 			"SyncMaterial",
 			tab
 		}
-		
+
 		SyncAPI:Invoke(unpack(args))
 	else	
 		SyncAPI:Invoke(
@@ -1039,7 +1067,7 @@ function F3XModule.CreateMesh(BasePart:BasePart)
 				Part = v
 			}
 		end
-		
+
 		local args = {
 			"CreateMeshes",
 			tab
